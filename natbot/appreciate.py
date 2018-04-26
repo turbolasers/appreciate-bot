@@ -2,25 +2,43 @@ import flask
 import requests
 from flask import Flask
 from flask import request
+from flask import abort
+
+import logging
+logger = logging.getLogger('natbot')
+logger.addHandler(logging.FileHandler('natbot.log'))
+logger.setLevel(logging.INFO)
 
 application = Flask(__name__)
 
 @application.route('/APR', methods=['POST'])
 def hello():
+    accepted_format = "Accepted format: /appreciate [@user] [message]"
     origin_url = request.form['response_url']
     submitting_user_id = request.form['user_id']
     submitting_user = request.form['user_name']
     print("Appreciation submitted by " + submitting_user_id + " aka " + submitting_user)
     entire_message = (request.form['text'])
-    receiving_user, appreciation_text = entire_message.split(" ", 1)
+    if entire_message.lower() == "help":
+        print("Help requested")
+        return(accepted_format)
+    try:
+        receiving_user, appreciation_text = entire_message.split(" ", 1)
+    except:
+        print("Error: Could not split entire_message")
+        return(accepted_format)
     receiving_user_id = receiving_user.split("|")[0] + ">"
+    if not receiving_user_id.startswith("<@"):
+        print("Error: Message did not begin with a receiving_user")
+        return(accepted_format)
     print("Appreciation to be recieved by " + receiving_user)
     print(appreciation_text)
     watercooler_url = "https://hooks.slack.com/services/url"
+    my_bot_and_me_url = "https://hooks.slack.com/services/url"
     def do_post(origin_url, receiving_user, appreciation_text):
         import time
         time.sleep(1)
-        r = requests.post(watercooler_url, json = {"text" : receiving_user + " " + appreciation_text, "response_type" : "in_channel"})
+        r = requests.post(my_bot_and_me_url, json = {"text" : receiving_user + " " + appreciation_text, "response_type" : "in_channel"})
         print(r.text)
     from threading import Thread
     thread = Thread(target=do_post, kwargs={'origin_url': origin_url, 'receiving_user': receiving_user, 'appreciation_text': appreciation_text})
