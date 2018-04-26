@@ -5,8 +5,7 @@ from flask import request
 from flask import abort
 from profanity import profanity
 
-# profanity.load_words("offensive_word_list.txt")
-profanity.load_words(open("offensive_word_list.txt", encoding='latin-1').read().split('\n'))
+profanity.load_words(open("profanity.txt", encoding='latin-1').read().split('\n'))
 
 import logging
 logger = logging.getLogger('natbot')
@@ -15,6 +14,12 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 application = Flask(__name__)
+
+#
+# TODO: replace "[" & "]" with "" in entire_message
+# TODO: auto restart if flask crashes
+# TODO: 
+#
 
 @application.route('/APR', methods=['POST'])
 def hello():
@@ -40,18 +45,21 @@ def hello():
     if profanity.contains_profanity(stripped_message):
         logger.info("UH-OH: We've got ourselves a ****er.")
         return("NO SWEARING!")
-    if entire_message.lower() == "help":
+    if stripped_message.lower() == "help":
         logger.info("INFO: Help requested")
         return(accepted_format)
     logger.info("Appreciation to be recieved by " + receiving_user)
     logger.info(appreciation_text)
-    watercooler_url = "https://hooks.slack.com/services/url"
     my_bot_and_me_url = "https://hooks.slack.com/services/url"
+    watercooler_url = "https://hooks.slack.com/services/url"
+    appreciate_url = "https://hooks.slack.com/services/url"
     def do_post(origin_url, receiving_user, appreciation_text):
         import time
         time.sleep(1)
-        r = requests.post(my_bot_and_me_url, json = {"text" : receiving_user + " " + appreciation_text, "response_type" : "in_channel"})
-        logger.info("requests.post() returns: " + r.text)
+        r = requests.post(watercooler_url, json = {"text" : receiving_user + " " + appreciation_text, "response_type" : "in_channel"})
+        r2 = requests.post(appreciate_url, json = {"text" : receiving_user + " " + appreciation_text, "response_type" : "in_channel"})
+        logger.info("requests.post() to watercooler returns: " + r.text)
+        logger.info("requests.post() to appreciate returns: " + r2.text)
     from threading import Thread
     thread = Thread(target=do_post, kwargs={'origin_url': origin_url, 'receiving_user': receiving_user, 'appreciation_text': appreciation_text})
     thread.start()
@@ -68,10 +76,7 @@ def shutdown():
     shutdown_server()
     return 'Server shutting down...'
 
-# run the app.
 if __name__ == "__main__":
-    # Setting debug to True enables debug output. This line should be
-    # removed before deploying a production app.
     application.debug = True
     application.run(host='0.0.0.0', port=80)
 
