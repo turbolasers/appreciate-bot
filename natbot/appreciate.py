@@ -24,15 +24,7 @@ def hello():
     submitting_user = request.form['user_name']
     logger.info("Appreciation submitted by " + submitting_user_id + " aka " + submitting_user)
     entire_message = (request.form['text'])
-    import string
-    stripped_message = ''.join(st for st in entire_message if st not in string.punctuation and not st == ' ')
-    logger.info("INFO: stripped_message = " + stripped_message)
-    if profanity.contains_profanity(stripped_message):
-        logger.info("UH-OH: We've got ourselves a ****er.")
-        return("NO SWEARING!")
-    if entire_message.lower() == "help":
-        logger.info("INFO: Help requested")
-        return(accepted_format)
+    logger.info("INFO: entire_message = " + entire_message)
     try:
         receiving_user, appreciation_text = entire_message.split(" ", 1)
     except:
@@ -41,6 +33,15 @@ def hello():
     receiving_user_id = receiving_user.split("|")[0] + ">"
     if not receiving_user_id.startswith("<@"):
         logger.error("ERROR: Message did not begin with a receiving_user")
+        return(accepted_format)
+    import string
+    stripped_message = ''.join(st for st in appreciation_text if st not in string.punctuation and not st == ' ')
+    logger.info("INFO: stripped_message = " + stripped_message)
+    if profanity.contains_profanity(stripped_message):
+        logger.info("UH-OH: We've got ourselves a ****er.")
+        return("NO SWEARING!")
+    if entire_message.lower() == "help":
+        logger.info("INFO: Help requested")
         return(accepted_format)
     logger.info("Appreciation to be recieved by " + receiving_user)
     logger.info(appreciation_text)
