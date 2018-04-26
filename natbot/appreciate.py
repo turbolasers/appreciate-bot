@@ -5,6 +5,9 @@ from flask import request
 from flask import abort
 from profanity import profanity
 
+# profanity.load_words("offensive_word_list.txt")
+profanity.load_words(open("offensive_word_list.txt", encoding='latin-1').read().split('\n'))
+
 import logging
 logger = logging.getLogger('natbot')
 logger.addHandler(logging.FileHandler('natbot.log'))
@@ -21,7 +24,10 @@ def hello():
     submitting_user = request.form['user_name']
     logger.info("Appreciation submitted by " + submitting_user_id + " aka " + submitting_user)
     entire_message = (request.form['text'])
-    if profanity.contains_profanity(entire_message):
+    import string
+    stripped_message = ''.join(st for st in entire_message if st not in string.punctuation and not st == ' ')
+    logger.info("INFO: stripped_message = " + stripped_message)
+    if profanity.contains_profanity(stripped_message):
         logger.info("UH-OH: We've got ourselves a ****er.")
         return("NO SWEARING!")
     if entire_message.lower() == "help":
