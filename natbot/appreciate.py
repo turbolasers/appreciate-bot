@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import flask
 import requests
 from flask import Flask
@@ -16,9 +18,8 @@ logger.setLevel(logging.INFO)
 application = Flask(__name__)
 
 #
-# TODO: replace "[" & "]" with "" in entire_message
 # TODO: auto restart if flask crashes
-# TODO:
+# TODO: slack user directly
 #
 
 @application.route('/APR', methods=['POST'])
@@ -28,31 +29,32 @@ def hello():
     submitting_user_id = request.form['user_id']
     submitting_user = request.form['user_name']
     logger.info("Appreciation submitted by " + submitting_user_id + " aka " + submitting_user)
-    
+
     original_message = (request.form['text'])
     entire_message = original_message.replace("[", "").replace("]", "")
     logger.info("INFO: entire_message = " + entire_message)
+    if entire_message.lower() == "help":
+        logger.info("INFO: Help requested")
+        return("Help? Sure, try the following to correctly format your message. \n" + accepted_format + "\n If you help with something else slack <@U0N1XK8R2> directly.")
     try:
         receiving_user, appreciation_text = entire_message.split(" ", 1)
     except:
         logger.error("ERROR: Could not split entire_message")
-        return("Error: Hmm, your message doesn't appear to be formatted correctly. Try the following. \n" + accepted_format)
+        return("Whoops: Hmm, your message doesn't appear to be formatted correctly. Try the following. \n" + accepted_format)
     receiving_user_id = receiving_user.split("|")[0] + ">"
     if not receiving_user_id.startswith("<@"):
         logger.error("ERROR: Message did not begin with a receiving_user")
-        return("Error: natbot could not find a valid user to address your appreciation to. Check your message formatting. \n" + accepted_format)
+        return("Whoops: natbot could not find a valid user to address your appreciation to. Check your message formatting. \n" + accepted_format)
     import string
-    stripped_message = ''.join(st for st in appreciation_text if st not in string.punctuation and not st == ' ')
+    # stripped_message = ''.join(st for st in appreciation_text if st not in string.punctuation and not st == ' ')
+    stripped_message = appreciation_text
     logger.info("INFO: stripped_message = " + stripped_message)
     if profanity.contains_profanity(stripped_message):
         logger.info("UH-OH: We've got ourselves a potty mouth.")
         return("NO SWEARING!")
-    if stripped_message.lower() == "help":
-        logger.info("INFO: Help requested")
-        return(accepted_format)
     logger.info("Appreciation to be recieved by " + receiving_user)
     logger.info(appreciation_text)
-    
+
     my_bot_and_me_url = "https://hooks.slack.com/services/url"
     watercooler_url = "https://hooks.slack.com/services/url"
     appreciate_url = "https://hooks.slack.com/services/url"
