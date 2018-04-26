@@ -3,11 +3,12 @@ import requests
 from flask import Flask
 from flask import request
 from flask import abort
-import profanity
+from profanity import profanity
 
 import logging
 logger = logging.getLogger('natbot')
 logger.addHandler(logging.FileHandler('natbot.log'))
+logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
 
 application = Flask(__name__)
@@ -18,32 +19,32 @@ def hello():
     origin_url = request.form['response_url']
     submitting_user_id = request.form['user_id']
     submitting_user = request.form['user_name']
-    print("Appreciation submitted by " + submitting_user_id + " aka " + submitting_user)
+    logger.info("Appreciation submitted by " + submitting_user_id + " aka " + submitting_user)
     entire_message = (request.form['text'])
     if profanity.contains_profanity(entire_message):
-        print("We've got ourselves a fucker.")
+        logger.info("UH-OH: We've got ourselves a ****er.")
         return("NO SWEARING!")
     if entire_message.lower() == "help":
-        print("Help requested")
+        logger.info("INFO: Help requested")
         return(accepted_format)
     try:
         receiving_user, appreciation_text = entire_message.split(" ", 1)
     except:
-        print("Error: Could not split entire_message")
+        logger.error("ERROR: Could not split entire_message")
         return(accepted_format)
     receiving_user_id = receiving_user.split("|")[0] + ">"
     if not receiving_user_id.startswith("<@"):
-        print("Error: Message did not begin with a receiving_user")
+        logger.error("ERROR: Message did not begin with a receiving_user")
         return(accepted_format)
-    print("Appreciation to be recieved by " + receiving_user)
-    print(appreciation_text)
+    logger.info("Appreciation to be recieved by " + receiving_user)
+    logger.info(appreciation_text)
     watercooler_url = "https://hooks.slack.com/services/url"
     my_bot_and_me_url = "https://hooks.slack.com/services/url"
     def do_post(origin_url, receiving_user, appreciation_text):
         import time
         time.sleep(1)
         r = requests.post(my_bot_and_me_url, json = {"text" : receiving_user + " " + appreciation_text, "response_type" : "in_channel"})
-        print(r.text)
+        logger.info("requests.post() returns: " + r.text)
     from threading import Thread
     thread = Thread(target=do_post, kwargs={'origin_url': origin_url, 'receiving_user': receiving_user, 'appreciation_text': appreciation_text})
     thread.start()
