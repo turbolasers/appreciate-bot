@@ -3,6 +3,7 @@ import requests
 from flask import Flask
 from flask import request
 from flask import abort
+import profanity
 
 import logging
 logger = logging.getLogger('natbot')
@@ -19,6 +20,9 @@ def hello():
     submitting_user = request.form['user_name']
     print("Appreciation submitted by " + submitting_user_id + " aka " + submitting_user)
     entire_message = (request.form['text'])
+    if profanity.contains_profanity(entire_message):
+        print("We've got ourselves a fucker.")
+        return("NO SWEARING!")
     if entire_message.lower() == "help":
         print("Help requested")
         return(accepted_format)
